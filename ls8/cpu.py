@@ -8,8 +8,8 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.reg = [0] * 8  # 8 slots
-        self.ram = [0] * 256  # 256
+        self.reg = [0] * 8  # 8 slots of general-purpose registers
+        self.ram = [0] * 256  # 256 bytes
         self.pc = 0  # program counter set to 0
 
     def load(self):
@@ -62,6 +62,46 @@ class CPU:
 
         print()
 
+    def ram_read(self, MAR):
+        """Read and return value stored at particular Address
+
+        Arguments:
+            MAR {Int} -- Memory Address Register
+
+        Returns:
+            Value -- The value that is stored at the particular MAR
+        """
+        return self.ram[MAR]
+
+    def write_ram(self, MDR, MAR):
+        """Write a value to a particular address
+
+        Arguments:
+            MDR {DAta} -- Memory Data Register
+            MAR {Int} -- Memory Address Register
+        """
+        self.ram[MAR] = MDR
+
     def run(self):
         """Run the CPU."""
-        pass
+        """Run
+        IR - Instruction Register
+        PC - Program counter
+        """
+        running = True
+
+        while running:
+            IR = self.ram_read(self.pc)
+
+            if IR == 130:  # LDI
+                self.reg[self.ram_read(self.pc + 1)
+                         ] = self.ram_read(self.pc + 2)
+                self.pc += 3  # 3 byte operation
+            elif IR == 71:  # PRN
+                print(self.reg[self.ram_read(self.pc + 1)])
+                self.pc += 2  # 2 byte operation
+            elif IR == 1:  # HLT
+                running = False
+            else:  # didn't understand cmd
+                print("The instruction provided was not understood.")
+                sys.exit(1)
