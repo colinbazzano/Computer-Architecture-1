@@ -14,7 +14,7 @@ class CPU:
 
     def load(self):
         """Load a program into memory."""
-        program = "./examples/print8/ls8"  # base file when no arg passed
+        program = "./examples/print8.ls8"  # base file when no arg passed
 
         if len(sys.argv) == 2:
             program = sys.argv[1]
@@ -23,19 +23,30 @@ class CPU:
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010,  # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111,  # PRN R0
+        #     0b00000000,
+        #     0b00000001,  # HLT
+        # ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
+        with open(program) as f:
+            for line in f:
+                # split off comments
+                line = line.split("#")
+                # remove white space
+                line = line[0].strip()
+                # comment line ignore
+                if line == "":
+                    continue
+                self.ram[address] = int(line, 2)  # base 2
+                address += 1
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -43,6 +54,8 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -106,6 +119,11 @@ class CPU:
                 self.pc += 2  # 2 byte operation
             elif IR == 1:  # HLT
                 running = False
+            elif IR == 162:
+                regA_num = self.ram[self.pc + 1]
+                regB_num = self.ram[self.pc + 2]
+                self.alu("MUL", regA_num, regB_num)
+                self.pc += 3
             else:  # didn't understand cmd
                 print("The instruction provided was not understood.")
                 sys.exit(1)
