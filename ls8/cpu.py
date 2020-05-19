@@ -14,6 +14,10 @@ class CPU:
 
     def load(self):
         """Load a program into memory."""
+        program = "./examples/print8/ls8"  # base file when no arg passed
+
+        if len(sys.argv) == 2:
+            program = sys.argv[1]
 
         address = 0
 
