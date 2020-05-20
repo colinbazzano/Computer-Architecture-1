@@ -2,6 +2,12 @@
 
 import sys
 
+PUSH = 0b01000101
+POP = 0b01000110
+
+SP = 7
+STACK_START = 0xF4
+
 
 class CPU:
     """Main CPU class."""
@@ -11,6 +17,7 @@ class CPU:
         self.reg = [0] * 8  # 8 slots of general-purpose registers
         self.ram = [0] * 256  # 256 bytes
         self.pc = 0  # program counter set to 0
+        self.reg[SP] = STACK_START
 
     def load(self):
         """Load a program into memory."""
@@ -124,6 +131,21 @@ class CPU:
                 regB_num = self.ram[self.pc + 2]
                 self.alu("MUL", regA_num, regB_num)
                 self.pc += 3
+            elif IR == PUSH:
+                reg_num = self.ram[self.pc + 1]
+                self.reg[SP] -= 1
+                self.ram[self.reg[SP]] = self.reg[reg_num]
+                # byte operation
+                self.pc += 2
+            elif IR == POP:
+                reg_num = self.ram[self.pc + 1]
+
+                stack_address = self.reg[SP]
+                stack_value = self.ram[stack_address]
+                self.reg[reg_num] = stack_value
+                self.reg[SP] += 1
+                # byte operation
+                self.pc += 2
             else:  # didn't understand cmd
                 print("The instruction provided was not understood.")
                 sys.exit(1)
