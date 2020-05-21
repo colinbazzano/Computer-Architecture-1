@@ -4,6 +4,11 @@ import sys
 
 PUSH = 0b01000101
 POP = 0b01000110
+ADD = 0b10100000
+
+CALL = 0b01010000
+RET = 0b00010001
+
 
 SP = 7
 STACK_START = 0xF4
@@ -146,6 +151,26 @@ class CPU:
                 self.reg[SP] += 1
                 # byte operation
                 self.pc += 2
+            elif IR == CALL:
+                return_address = self.pc + 2
+                self.reg[SP] -= 1
+                self.ram[self.reg[SP]] = return_address
+
+                reg_num = self.ram[self.pc + 1]
+                dest_address = self.reg[reg_num]
+                self.pc = dest_address
+            elif IR == RET:
+                return_address = self.ram[self.reg[SP]]
+                self.reg[SP] += 1
+                self.pc = return_address
+
+            elif IR == ADD:
+                regA_num = self.ram[self.pc + 1]
+                regB_num = self.ram[self.pc + 2]
+
+                self.alu("ADD", regA_num, regB_num)
+
+                self.pc += 3
             else:  # didn't understand cmd
                 print("The instruction provided was not understood.")
                 sys.exit(1)
