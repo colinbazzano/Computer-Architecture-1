@@ -9,6 +9,15 @@ ADD = 0b10100000
 CALL = 0b01010000
 RET = 0b00010001
 
+CMP = 0b10100111
+JMP = 0b01010100
+JNE = 0b01010110
+JEQ = 0b01010101
+
+LESS_THAN = 0b00000100
+GREATER_THAN = 0b00000010
+EQUAL = 0b00000001
+
 
 SP = 7
 STACK_START = 0xF4
@@ -23,6 +32,7 @@ class CPU:
         self.ram = [0] * 256  # 256 bytes
         self.pc = 0  # program counter set to 0
         self.reg[SP] = STACK_START
+        self.fl = 0b00000000
 
     def load(self):
         """Load a program into memory."""
@@ -68,6 +78,26 @@ class CPU:
         # elif op == "SUB": etc
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "CMP":
+            regA_num = self.ram[self.pc + 1]
+            regB_num = self.ram[self.pc + 2]
+            # get the values from the registers
+            valueA = self.reg[regA_num]
+            valueB = self.reg[regB_num]
+
+            # setting the flag register
+            # equal
+            if valueA == valueB:
+                self.fl = EQUAL
+            # less than
+            elif valueA < valueB:
+                self.fl = LESS_THAN
+            # greater than
+            else:
+                self.fl = GREATER_THAN
+
+            # # increment pc
+            # self.pc += 3
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -171,6 +201,29 @@ class CPU:
                 self.alu("ADD", regA_num, regB_num)
 
                 self.pc += 3
+            elif IR == JMP:
+                reg_num = self.ram[self.pc + 1]
+                self.pc = self.reg[reg_num]
+            elif IR == CMP:
+                regA_num = self.ram[self.pc + 1]
+                regB_num = self.ram[self.pc + 2]
+
+                self.alu("CMP", regA_num, regB_num)
+                self.pc += 3
+            elif IR == JEQ:
+                if self.fl == EQUAL:
+                    reg_num = self.ram[self.pc + 1]
+                    address = self.reg[reg_num]
+                    self.pc = address
+                else:
+                    self.pc += 2
+            elif IR == JNE:
+                if self.fl != EQUAL:
+                    reg_num = self.ram[self.pc + 1]
+                    address = self.reg[reg_num]
+                    self.pc = address
+                else:
+                    self.pc += 2
             else:  # didn't understand cmd
                 print("The instruction provided was not understood.")
                 sys.exit(1)
